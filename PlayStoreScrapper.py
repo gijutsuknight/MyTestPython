@@ -1,70 +1,40 @@
-"""
-📘 Example Output File (PlayStoreScrapped_Result/com.microsoft.office.onenote.txt)
-
-App Name: Microsoft OneNote
-App ID: com.microsoft.office.onenote
-Installs: 500,000,000+
-Score: 4.7
-------------------------------------------------------------
-
-User: John Doe | Score: 5 | Review: Excellent app for note taking!
-User: Alice W | Score: 3 | Review: Needs improvement in sync speed.
-User: Bob K | Score: 4 | Review: Love the integration with Outlook.
-
-------------------------------------------------------------
-Total reviews written: 1250
-Time taken: 32.47 seconds
-
-📊 Example Excel Summary (PlayStoreScrapped_Result/NoteAppSummary.xlsx)
-
-| No | App Name                | Package ID                            | PlayStore Count Install | Average Score | PythonPlayStoreCrawlerCount | Time Taken (s) |
-|----|--------------------------|---------------------------------------|--------------------------|----------------|------------------------------|----------------|
-| 1  | Google Keep             | com.google.android.keep               | 1,000,000,000+          | 4.7            | 193787                       | 103.8          |
-| 2  | Microsoft OneNote       | com.microsoft.office.onenote          | 500,000,000+            | 4.7            | 157443                       | 85.03          |
-"""
-
 from google_play_scraper import app, reviews_all, Sort
 import time
 import pandas as pd
 import os
 
 # ============================================================
-# 🧩 CONFIGURATION SECTION — all main settings centralized here
+# 🧩 CONFIGURATION SECTION
 # ============================================================
 CONFIG = {
-    "OUTPUT_DIR": "PlayStoreScrapped_Result",             # Folder to store results
-    "SUMMARY_FILENAME": "Summary.xlsx",                   # Excel summary file name
-    "APP_IDS": [                                          # List of Play Store package IDs
-        "com.google.android.keep",
-        "com.microsoft.office.onenote",
-        "notion.id",
-        "com.evernote",
-        "com.automattic.simplenote",
-        "com.socialnmobile.dictapps.notepad.color.note",
-        "com.samsung.android.app.notes",
-        "com.zoho.notebook",
-        "net.cozic.joplin",
-        "com.standardnotes",
-        "com.streetwriters.notesnook",
-        "com.steadfastinnovation.android.projectpapyrus",
-        "com.fiistudio.fiinote",
-        "com.rgiskard.fairnote",
-        "com.viettran.INKredible",
-        "com.yygg.note.app",
-        "com.fluidtouch.noteshelf3",
-        "md.obsidian",
-        "com.bvblogic.nimbusnote",
-        "com.mmm.postit"
+    "OUTPUT_DIR": "PlayStoreScrapped_Result",
+    "SUMMARY_FILENAME": "Summary.xlsx",
+    "APP_IDS": [
+        "my.com.tngdigital.ewallet",
+        "com.shopeepay.my",
+        "com.maybank2u.life",
+        "com.cimb.octo",
+        "com.rhbgroup.rhbmobilebanking",
+        "com.pbb.mypb",
+        "com.bankislam.bimbmobile",
+        "com.beubankislam",
+        "com.bsn.mybsn",
+        "com.asnb.app",
+        "my.kwsp.ikaun",
+        "com.uob.mightymy",
+        "com.ambank.amonline",
+        "com.ocbc.mobile",
+        "com.hlb.connect",
+        "com.htsu.hsbcmobilebanking",
+        "my.com.alliancebank",
+        "com.irakyatmob.bkrm",
+        "my.com.aeon.wallet",
+        "com.wise.android"
     ]
 }
 
-# Create output directory
 os.makedirs(CONFIG["OUTPUT_DIR"], exist_ok=True)
-
-# 🕒 Start overall timer
 overall_start = time.time()
-
-# 📊 Store app summaries
 summary_data = []
 
 # ============================================================
@@ -75,65 +45,65 @@ for i, app_id in enumerate(CONFIG["APP_IDS"], start=1):
     print(f"Processing ({i}/{len(CONFIG['APP_IDS'])}): {app_id}")
     start_time = time.time()
 
+    app_name = "-"
+    installs = "-"
+    score = "-"
+    review_count = 0
+    duration = 0
+    exists = "No"
+
     try:
         # Fetch app metadata
         result = app(app_id)
-        app_name = result['title']
-        installs = result.get('installs', 'N/A')
-        score = result.get('score', 'N/A')
+        app_name = result.get('title', '-')
+        installs = result.get('installs', '-')
+        score = result.get('score', '-')
+        exists = "Yes"
         print(f"{app_name} — {installs} installs — Score: {score}")
 
-        # Fetch all reviews (sorted newest first)
+        # Fetch reviews
         rvs = reviews_all(app_id, sort=Sort.NEWEST)
+        review_count = len(rvs)
 
-        # Output file path
+        # Save reviews
         file_name = os.path.join(CONFIG["OUTPUT_DIR"], f"{app_id}.txt")
-
-        # Write metadata + reviews
         with open(file_name, "w", encoding="utf-8") as f:
-            f.write(f"App Name: {app_name}\n")
-            f.write(f"App ID: {app_id}\n")
-            f.write(f"Installs: {installs}\n")
-            f.write(f"Score: {score}\n")
+            f.write(f"App Name: {app_name}\nApp ID: {app_id}\nInstalls: {installs}\nScore: {score}\n")
             f.write("-" * 60 + "\n\n")
             for r in rvs:
                 f.write(f"User: {r['userName']} | Score: {r['score']} | Review: {r['content']}\n")
 
-        # Measure time taken
-        end_time = time.time()
-        duration = round(end_time - start_time, 2)
-
-        # Add footer info
+        duration = round(time.time() - start_time, 2)
         with open(file_name, "a", encoding="utf-8") as f:
             f.write("\n" + "-" * 60 + "\n")
-            f.write(f"Total reviews written: {len(rvs)}\n")
+            f.write(f"Total reviews written: {review_count}\n")
             f.write(f"Time taken: {duration} seconds\n")
 
-        # Add to summary data
-        summary_data.append({
-            "No": i,
-            "App Name": app_name,
-            "Package ID": app_id,
-            "PlayStore Count Install": installs,
-            "Average Score": score,
-            "PythonPlayStoreCrawlerCount": len(rvs),
-            "Time Taken (s)": duration
-        })
-
-        print(f"✅ READY — {len(rvs)} reviews saved to {file_name} in {duration} seconds\n")
+        print(f"✅ READY — {review_count} reviews saved in {duration}s\n")
 
     except Exception as e:
         print(f"❌ Error processing {app_id}: {e}\n")
 
+    # Add summary (even if failed)
+    summary_data.append({
+        "No": i,
+        "App Name": app_name,
+        "Package ID": app_id,
+        "PlayStore Count Install": installs,
+        "Average Score": score,
+        "PythonPlayStoreCrawlerCount": review_count,
+        "Time Taken (s)": duration,
+        "Exist in PlayStore": exists
+    })
+
 # ============================================================
 # 📊 EXPORT SUMMARY TO EXCEL
 # ============================================================
-overall_end = time.time()
-total_duration = round(overall_end - overall_start, 2)
-print("=" * 80)
-print(f"🎯 ALL DONE — Total scraping time: {total_duration} seconds")
-
 df = pd.DataFrame(summary_data)
 excel_file = os.path.join(CONFIG["OUTPUT_DIR"], CONFIG["SUMMARY_FILENAME"])
 df.to_excel(excel_file, index=False)
+
+total_duration = round(time.time() - overall_start, 2)
+print("=" * 80)
+print(f"🎯 ALL DONE — Total scraping time: {total_duration} seconds")
 print(f"📁 Summary Excel file saved as: {excel_file}")

@@ -1,5 +1,5 @@
 PyJWT==2.10.1
-requests==2.32.5
+requests==2.23.0
 google-auth==2.35.0
 google-api-python-client==2.147.0
 google-auth-httplib2==0.2.0
@@ -8,3 +8,7 @@ pyjwt[crypto]==2.10.1
 
 # PlayStoreScrapper.py
 google-play-scraper==1.2.7
+pandas==2.3.3
+openpyxl==3.1.5
+# AppStoreScrapper
+app-store-scraper==0.3.5
